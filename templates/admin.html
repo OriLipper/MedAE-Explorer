@@ -1,0 +1,168 @@
+<!-- templates/admin.html -->
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - MedAE Explorer{% endblock %}
+
+{% block content %}
+
+<div class="bg-white shadow rounded p-6">
+  <h1 class="text-3xl font-bold mb-4 text-blue-700">Admin Panel</h1>
+
+  <!-- Table Selection Form -->
+  <form method="GET" action="/admin" class="mb-6">
+    <label for="table" class="block mb-2 text-gray-700 font-semibold">Select a Table:</label>
+    <select 
+      name="table" 
+      id="table" 
+      class="border rounded w-64 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+      onchange="this.form.submit()"
+    >
+      <option value="" {% if not table_name %}selected{% endif %}>-- Choose Table --</option>
+      <option value="safety_reports" {% if table_name=='safety_reports' %}selected{% endif %}>safety_reports</option>
+      <option value="patients" {% if table_name=='patients' %}selected{% endif %}>patients</option>
+      <option value="reactions" {% if table_name=='reactions' %}selected{% endif %}>reactions</option>
+      <option value="drugs" {% if table_name=='drugs' %}selected{% endif %}>drugs</option>
+      <option value="companies" {% if table_name=='companies' %}selected{% endif %}>companies</option>
+    </select>
+  </form>
+
+  {% if table_name %}
+    <!-- Display Information About the Loaded Rows -->
+    <p class="text-gray-600 mb-4">
+      Showing up to {{ rows|length }} rows from <strong>{{ table_name }}</strong>. 
+      Loaded so far: {{ start + rows|length }}.
+    </p>
+
+    <!-- Data Table Displaying Rows from the Selected Table -->
+    <div class="admin-table-container">
+      <div class="admin-table-scroll">
+        <table class="min-w-full border border-gray-300">
+          <thead class="bg-gray-100 border-b">
+            <tr>
+              {% for col in columns %}
+              <th class="px-4 py-2 text-left border-r border-gray-300 text-gray-700">{{ col }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+            <tr 
+              class="hover:bg-gray-50 cursor-pointer border-b"
+              onclick="openEditModal('{{ row['id_key'] }}')"
+            >
+              {% for col in columns %}
+              <td class="px-4 py-2 border-r border-gray-200 text-sm text-gray-700">
+                {{ row[col] if row[col] is not none else 'NULL' }}
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- The scrollbar is handled by the .admin-table-scroll div -->
+    </div>
+
+    <!-- Load More Rows Button (Visible Only If 100 Rows Are Loaded) -->
+    {% if rows|length == 100 %}
+      <form method="GET" action="/admin" class="mt-4">
+        <input type="hidden" name="table" value="{{ table_name }}">
+        <input type="hidden" name="start" value="{{ start + 100 }}">
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Load 100 More
+        </button>
+      </form>
+    {% endif %}
+  {% endif %}
+</div>
+
+<!-- Edit Modal for Updating Row Details -->
+<div 
+  id="edit-modal" 
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+>
+  <div class="bg-white rounded-lg w-11/12 md:w-3/4 lg:w-1/2 p-6 relative max-h-[80vh] overflow-y-auto">
+    <!-- Close Button for the Modal -->
+    <button 
+      onclick="closeEditModal()" 
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+    >
+      &times;
+    </button>
+    <div id="edit-modal-content" class="text-center">
+      <!-- Placeholder for Dynamic Edit Form Loaded via AJAX -->
+      <p class="text-center text-gray-500">Loading...</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/**
+ * Opens the Edit Modal and fetches the edit form for the selected row.
+ * @param {string} rowId - The unique identifier of the row to edit.
+ */
+function openEditModal(rowId) {
+  const modal = document.getElementById('edit-modal');
+  modal.classList.remove('hidden');
+
+  // Construct the URL for fetching the edit form
+  const tableName = "{{ table_name if table_name else '' }}";
+  fetch(`/admin/edit/${tableName}/${rowId}`)
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('edit-modal-content').innerHTML = html;
+    })
+    .catch(err => {
+      console.error(err);
+      document.getElementById('edit-modal-content').innerHTML = '<p class="text-red-500">Error loading edit form.</p>';
+    });
+}
+
+/**
+ * Closes the Edit Modal and resets its content.
+ */
+function closeEditModal() {
+  const modal = document.getElementById('edit-modal');
+  modal.classList.add('hidden');
+  document.getElementById('edit-modal-content').innerHTML = '<p class="text-center">Loading...</p>';
+}
+
+/**
+ * Handles the submission of the edit form via AJAX.
+ * Prevents the default form submission and sends the data asynchronously.
+ * @param {Event} event - The form submission event.
+ * @param {HTMLFormElement} form - The form element being submitted.
+ */
+function submitEditForm(event, form) {
+  event.preventDefault();
+
+  // Collect form data
+  const formData = new FormData(form);
+  const tableName = formData.get('table');
+  const rowId = formData.get('row_id');
+
+  // Send the form data to the server for updating
+  fetch(`/admin/update`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // Notify the user of successful update and reload the page to reflect changes
+      alert('Row updated successfully!');
+      window.location.reload();
+    } else {
+      // Notify the user of any errors encountered during the update
+      alert('Error updating row: ' + data.error);
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Network or server error while updating row.');
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,212 @@
+<!-- templates/report_detail.html -->
+
+<div class="p-4 overflow-y-auto max-h-[80vh]">
+  <h2 class="text-2xl font-bold mb-4">Safety Report Details</h2>
+
+  <!-- Report Identification and Dates -->
+  <p><strong>ID:</strong> {{ report.safetyreportid }}</p>
+  <p><strong>Date Received:</strong> 
+     {{ report.receivedate.strftime('%Y-%m-%d') if report.receivedate else 'N/A' }}</p>
+  <p><strong>Date of Receipt:</strong> 
+     {{ report.receiptdate.strftime('%Y-%m-%d') if report.receiptdate else 'N/A' }}</p>
+
+  <!-- Seriousness Indicator -->
+  <p><strong>Serious:</strong>
+    {% if report.serious == 1 %}
+      Yes
+    {% else %}
+      No
+    {% endif %}
+  </p>
+
+  <!-- Seriousness Criteria Details (Visible Only If Report Is Serious) -->
+  {% if report.serious == 1 %}
+    <ul class="list-disc list-inside ml-4">
+      <li>
+        <strong>Death:</strong> 
+        {% if report.seriousnessdeath == 1 %}
+          Yes
+        {% else %}
+          No
+        {% endif %}
+      </li>
+      <li>
+        <strong>Life-Threatening:</strong>
+        {% if report.seriousnesslifethreatening == 1 %}
+          Yes
+        {% else %}
+          No
+        {% endif %}
+      </li>
+      <li>
+        <strong>Hospitalization:</strong>
+        {% if report.seriousnesshospitalization == 1 %}
+          Yes
+        {% else %}
+          No
+        {% endif %}
+      </li>
+      <li>
+        <strong>Disabling:</strong>
+        {% if report.seriousnessdisabling == 1 %}
+          Yes
+        {% else %}
+          No
+        {% endif %}
+      </li>
+      <li>
+        <strong>Congenital Anomaly:</strong>
+        {% if report.seriousnesscongenitalanomali == 1 %}
+          Yes
+        {% else %}
+          No
+        {% endif %}
+      </li>
+      <li>
+        <strong>Other Medically Important Condition:</strong>
+        {% if report.seriousnessother == 1 %}
+          Yes
+        {% else %}
+          No
+        {% endif %}
+      </li>
+    </ul>
+  {% endif %}
+
+  <!-- Reporter Country Information -->
+  <p><strong>Reporter Country:</strong> 
+     {{ report.primarysource_reportercountry if report.primarysource_reportercountry else 'N/A' }}
+  </p>
+
+  <!-- Company Information Section -->
+  <h3 class="text-xl font-semibold mt-6 mb-2">Company</h3>
+  {% if report.company %}
+    <p><strong>Number:</strong> {{ report.company.companynumb }}</p>
+    <p><strong>Name:</strong> {{ report.company.companyname }}</p>
+  {% else %}
+    <p>No company information available.</p>
+  {% endif %}
+
+  <!-- Patients Involved in the Report -->
+  <h3 class="text-xl font-semibold mt-6 mb-2">Patients</h3>
+  {% if report.patients %}
+    <ul class="list-disc list-inside">
+      {% for p in report.patients %}
+        <li>
+          <strong>Age Group:</strong>
+          {% if p.patientagegroup == 1 %}
+            Neonate
+          {% elif p.patientagegroup == 2 %}
+            Infant
+          {% elif p.patientagegroup == 3 %}
+            Child
+          {% elif p.patientagegroup == 4 %}
+            Adolescent
+          {% elif p.patientagegroup == 5 %}
+            Adult
+          {% elif p.patientagegroup == 6 %}
+            Elderly
+          {% else %}
+            Unknown
+          {% endif %}
+
+          &nbsp;|&nbsp;
+
+          <strong>Sex:</strong>
+          {% if p.patientsex == 1 %}
+            Male
+          {% elif p.patientsex == 2 %}
+            Female
+          {% else %}
+            Unknown
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No patient records available.</p>
+  {% endif %}
+
+  <!-- Reactions Documented in the Report -->
+  <h3 class="text-xl font-semibold mt-6 mb-2">Reactions</h3>
+  {% if report.reactions %}
+    <ul class="list-disc list-inside">
+      {% for r in report.reactions %}
+        <li>
+          <strong>Reaction:</strong> {{ r.reactionmeddrapt }}
+          <strong>Outcome:</strong> 
+          {% if r.reactionoutcome == 1 %}
+            Recovered/Resolved
+          {% elif r.reactionoutcome == 2 %}
+            Recovering/Resolving
+          {% elif r.reactionoutcome == 3 %}
+            Not Recovered/Not Resolved
+          {% elif r.reactionoutcome == 4 %}
+            Recovered/Resolved with Sequelae
+          {% elif r.reactionoutcome == 5 %}
+            Fatal
+          {% elif r.reactionoutcome == 6 %}
+            Unknown
+          {% else %}
+            Unknown
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No reactions recorded.</p>
+  {% endif %}
+
+  <!-- Drugs Involved in the Report -->
+  <h3 class="text-xl font-semibold mt-6 mb-2">Drugs</h3>
+  {% if grouped_drugs %}
+    <ul class="list-disc list-inside">
+      {% for g in grouped_drugs %}
+        <li class="mb-3">
+          <strong>Medicinal Product:</strong> 
+          {{ g.medicinalproduct }} 
+          {% if g.count > 1 %}
+            (repeated {{ g.count }} times)
+          {% endif %}
+          <br>
+
+          <!-- Detailed Information About Each Drug Group -->
+          {% set first_record = g.records[0] if g.records else None %}
+          {% if first_record %}
+            <ul class="list-disc list-inside ml-4">
+              {% if first_record.drugcharacterization %}
+                <li>
+                  <strong>Characterization:</strong> 
+                  {% if first_record.drugcharacterization == 1 %}
+                    Suspect
+                  {% elif first_record.drugcharacterization == 2 %}
+                    Concomitant
+                  {% elif first_record.drugcharacterization == 3 %}
+                    Interacting
+                  {% else %}
+                    Unknown
+                  {% endif %}
+                </li>
+              {% endif %}
+              {% if first_record.drugdosageform %}
+                <li><strong>Dosage Form:</strong> {{ first_record.drugdosageform }}</li>
+              {% endif %}
+              {% if first_record.drugadministrationroute %}
+                <li><strong>Administration Route:</strong> {{ first_record.drugadministrationroute }}</li>
+              {% endif %}
+              {% if first_record.drugindication %}
+                <li><strong>Indication:</strong> {{ first_record.drugindication }}</li>
+              {% endif %}
+              {% if first_record.activesubstancename %}
+                <li><strong>Active Substance:</strong> {{ first_record.activesubstancename }}</li>
+              {% endif %}
+              <!-- Additional fields can be added here as needed -->
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No drug information available.</p>
+  {% endif %}
+</div>

@@ -1,0 +1,47 @@
+<!-- templates/admin_login.html -->
+
+{% extends "base.html" %}
+
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10 p-6 bg-white shadow rounded">
+  <!-- Page Heading -->
+  <h1 class="text-2xl font-bold mb-4 text-center">Admin Panel Login</h1>
+
+  <!-- Display Flash Messages (e.g., Login Errors) -->
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="mb-4">
+        {% for msg in messages %}
+          <p class="text-red-600 text-sm">{{ msg }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Admin Login Form -->
+  <form method="POST" action="{{ url_for('admin_panel') }}">
+    <!-- Password Input Field -->
+    <label for="admin_password" class="block text-gray-700 font-semibold mb-1">
+      Password
+    </label>
+    <input 
+      type="password" 
+      name="admin_password" 
+      id="admin_password" 
+      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600 mb-4"
+      placeholder="Enter admin password..."
+      required
+    />
+
+    <!-- Submit Button -->
+    <button 
+      type="submit" 
+      class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
+    >
+      Login
+    </button>
+  </form>
+</div>
+{% endblock %}

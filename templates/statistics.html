@@ -1,0 +1,253 @@
+<!-- templates/statistics.html -->
+{% extends "base.html" %}
+
+{% block title %}Statistics for "{{ query }}"{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold text-center mb-6">Statistics for "{{ query }}"</h1>
+
+{% if total_reports == 0 %}
+    <div class="bg-white p-6 rounded shadow-md text-center">
+        <p class="text-xl text-gray-700">No safety reports found for "{{ query }}".</p>
+    </div>
+{% else %}
+    <div class="bg-white p-6 rounded shadow-md mb-6">
+        <p class="text-xl mb-2">
+            <strong>Total Safety Reports:</strong> {{ total_reports }}
+        </p>
+        
+        <!-- Charts Container -->
+        <div class="flex flex-col space-y-8 items-center justify-center">
+
+            <!-- Reports Over Time Line Chart -->
+            <div class="w-full max-w-3xl">
+                <h2 class="text-xl font-semibold mb-2">Reports Over Time</h2>
+                <div class="bg-white p-4 rounded shadow" style="height: 400px;">
+                    <canvas id="lineChart" width="800" height="400"></canvas>
+                </div>
+            </div>
+
+            <!-- Age Group Distribution Pie Chart -->
+            <div class="w-full max-w-3xl">
+                <h2 class="text-xl font-semibold mb-2">Age Group Distribution</h2>
+                <div class="bg-white p-4 rounded shadow" style="height: 400px;">
+                    <canvas id="pieChart" width="800" height="400"></canvas>
+                </div>
+            </div>
+
+            <!-- Seriousness Distribution Bar Chart -->
+            <div class="w-full max-w-3xl">
+                <h2 class="text-xl font-semibold mb-2">Seriousness Distribution</h2>
+                <div class="bg-white p-4 rounded shadow" style="height: 400px;">
+                    <canvas id="barChartSerious" width="800" height="400"></canvas>
+                </div>
+            </div>
+
+            <!-- Seriousness Criteria Horizontal Bar Chart -->
+            <div class="w-full max-w-3xl">
+                <h2 class="text-xl font-semibold mb-2">Seriousness Criteria</h2>
+                <div class="bg-white p-4 rounded shadow" style="height: 400px;">
+                    <canvas id="barChartCriteria" width="800" height="400"></canvas>
+                </div>
+            </div>
+
+            <!-- Reporter Country Distribution Bar Chart -->
+            <div class="w-full max-w-3xl">
+                <h2 class="text-xl font-semibold mb-2">Reporter Country Distribution</h2>
+                <div class="bg-white p-4 rounded shadow" style="height: 400px;">
+                    <canvas id="barChartCountry" width="800" height="400"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Reactions Horizontal Bar Chart -->
+            <div class="w-full max-w-3xl">
+                <h2 class="text-xl font-semibold mb-2">Top Reactions</h2>
+                <div class="bg-white p-4 rounded shadow" style="height: 400px;">
+                    <canvas id="barChartReactions" width="800" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Navigation Link to Return to All Reports -->
+<div class="mt-6 text-center">
+    <a href="/" class="text-blue-500 hover:underline">← Back to All Reports</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/**
+ * Converts Python dictionaries passed from the backend into JavaScript objects.
+ */
+const monthlyData = {{ monthly_data|tojson }};
+const ageGroupCounts = {{ age_group_counts|tojson }};
+const seriousnessCounts = {{ seriousness_counts|tojson }};
+const seriousCriteriaCounts = {{ serious_criteria_counts|tojson }};
+const countryCounts = {{ country_counts|tojson }};
+const topReactions = {{ top_reactions|tojson }};
+
+/**
+ * Utility function to sort data objects in descending order based on their values.
+ * @param {Object} dataObj - The data object to sort.
+ * @returns {Object} - An object containing sorted labels and values.
+ */
+function sortDescending(dataObj) {
+    const sortedEntries = Object.entries(dataObj).sort((a, b) => b[1] - a[1]);
+    const sortedLabels = sortedEntries.map(entry => entry[0]);
+    const sortedValues = sortedEntries.map(entry => entry[1]);
+    return { labels: sortedLabels, values: sortedValues };
+}
+
+/**
+ * Initializes the Reports Over Time line chart using Chart.js.
+ */
+const lineLabels = Object.keys(monthlyData);
+const lineValues = Object.values(monthlyData);
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+new Chart(lineCtx, {
+    type: 'line',
+    data: {
+        labels: lineLabels,
+        datasets: [{
+            label: 'Reports per Month',
+            data: lineValues,
+            borderColor: 'rgba(54,162,235,1)',
+            tension: 0.1,
+            fill: false,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+/**
+ * Initializes the Age Group Distribution pie chart using Chart.js.
+ */
+const pieLabels = Object.keys(ageGroupCounts);
+const pieValues = Object.values(ageGroupCounts);
+const pieCtx = document.getElementById('pieChart').getContext('2d');
+new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+        labels: pieLabels,
+        datasets: [{
+            data: pieValues,
+            backgroundColor: ['#FF6384','#36A2EB','#FFCE56','#4BC0C0','#9966FF','#FF9F40','#AAAAAA']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+/**
+ * Initializes the Seriousness Distribution bar chart using Chart.js.
+ */
+const barSeriousLabels = Object.keys(seriousnessCounts);
+const barSeriousValues = Object.values(seriousnessCounts);
+const barSeriousCtx = document.getElementById('barChartSerious').getContext('2d');
+new Chart(barSeriousCtx, {
+    type: 'bar',
+    data: {
+        labels: barSeriousLabels,
+        datasets: [{
+            label: 'Number of Reports',
+            data: barSeriousValues,
+            backgroundColor: ['rgba(255,99,132,0.7)', 'rgba(75,192,192,0.7)']
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+/**
+ * Initializes the Seriousness Criteria horizontal bar chart using Chart.js.
+ * Data is sorted in descending order before rendering.
+ */
+const sortedCriteria = sortDescending(seriousCriteriaCounts);
+const criteriaLabels = sortedCriteria.labels;
+const criteriaValues = sortedCriteria.values;
+const barCriteriaCtx = document.getElementById('barChartCriteria').getContext('2d');
+new Chart(barCriteriaCtx, {
+    type: 'bar',
+    data: {
+        labels: criteriaLabels,
+        datasets: [{
+            label: 'Number of Reports',
+            data: criteriaValues,
+            backgroundColor: 'rgba(153,102,255,0.7)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y', // Configures the chart to be horizontal
+        scales: { x: { beginAtZero: true } }
+    }
+});
+
+/**
+ * Initializes the Reporter Country Distribution bar chart using Chart.js.
+ * Data is sorted in descending order before rendering.
+ */
+const sortedCountries = sortDescending(countryCounts);
+const countryLabels = sortedCountries.labels;
+const countryValues = sortedCountries.values;
+const barCountryCtx = document.getElementById('barChartCountry').getContext('2d');
+new Chart(barCountryCtx, {
+    type: 'bar',
+    data: {
+        labels: countryLabels,
+        datasets: [{
+            label: 'Reports by Country',
+            data: countryValues,
+            backgroundColor: 'rgba(255,159,64,0.7)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+/**
+ * Initializes the Top Reactions horizontal bar chart using Chart.js.
+ * Data is sorted in descending order before rendering.
+ */
+const sortedReactions = sortDescending(topReactions);
+const reactionLabels = sortedReactions.labels;
+const reactionValues = sortedReactions.values;
+const barReactionsCtx = document.getElementById('barChartReactions').getContext('2d');
+new Chart(barReactionsCtx, {
+    type: 'bar',
+    data: {
+        labels: reactionLabels,
+        datasets: [{
+            label: 'Count of Reactions',
+            data: reactionValues,
+            backgroundColor: 'rgba(255,206,86,0.7)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y', // Configures the chart to be horizontal
+        scales: { x: { beginAtZero: true } }
+    }
+});
+</script>
+{% endblock %}

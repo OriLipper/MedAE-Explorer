@@ -1,0 +1,344 @@
+<!-- templates/index.html -->
+
+{% extends "base.html" %}
+
+{% block title %}All Safety Reports{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold text-center mb-6">All Safety Reports</h1>
+
+<!-- Drug Search Section -->
+<div class="mb-6 max-w-2xl mx-auto">
+  <form method="GET" action="/" class="relative">
+    <label for="drug-search" class="block text-gray-700 font-semibold mb-1">
+      Search by Drug Name
+    </label>
+    <input
+      type="text"
+      id="drug-search"
+      name="filter_drug"
+      value="{{ filter_drug if filter_drug else '' }}"
+      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+      placeholder="Type a drug name..."
+      autocomplete="off"
+      oninput="fetchSuggestions(this.value)"
+    />
+
+    <!-- Autocomplete Suggestions Dropdown -->
+    <div 
+      id="autocomplete-results"
+      class="absolute left-0 right-0 bg-white border border-gray-300 rounded mt-1 shadow-lg z-10 hidden"
+    ></div>
+
+    <!-- Search and Clear Buttons -->
+    <div class="mt-4 flex items-center space-x-3">
+      <button 
+        type="submit"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Search
+      </button>
+      {% if filter_drug %}
+        <a 
+          href="/"
+          class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+        >
+          Clear
+        </a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Safety Reports Table -->
+<div class="bg-white shadow-md rounded overflow-x-auto">
+  <table class="min-w-full table-auto">
+    <thead class="bg-gray-100 border-b border-gray-300">
+      <tr>
+        <th class="px-4 py-2 text-left">ID</th>
+        <th class="px-4 py-2 text-left">Date</th>
+        <th class="px-4 py-2 text-left">Country</th>
+        <th class="px-4 py-2 text-left">Age Group</th>
+        <th class="px-4 py-2 text-left">Sex</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if rows and rows|length > 0 %}
+        {% for r in rows %}
+        <tr 
+          class="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+          onclick="openModal('{{ r.safetyreportid }}')"
+        >
+          <td class="px-4 py-2">
+            <span class="text-blue-600 hover:underline">{{ r.safetyreportid }}</span>
+          </td>
+          <td class="px-4 py-2">
+            {% if r.receivedate %}
+              {{ r.receivedate.strftime('%Y-%m-%d') }}
+            {% else %}
+              N/A
+            {% endif %}
+          </td>
+          <td class="px-4 py-2">
+            {{ r.country if r.country else 'N/A' }}
+          </td>
+          <td class="px-4 py-2">
+            {% if r.age_group == 1 %}
+              Neonate
+            {% elif r.age_group == 2 %}
+              Infant
+            {% elif r.age_group == 3 %}
+              Child
+            {% elif r.age_group == 4 %}
+              Adolescent
+            {% elif r.age_group == 5 %}
+              Adult
+            {% elif r.age_group == 6 %}
+              Elderly
+            {% else %}
+              Unknown
+            {% endif %}
+          </td>
+          <td class="px-4 py-2">
+            {% if r.sex == 1 %}
+              Male
+            {% elif r.sex == 2 %}
+              Female
+            {% else %}
+              Unknown
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+            No safety reports found.
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination Controls -->
+{% set current_page = page|int %}
+<div class="flex justify-center items-center mt-4 space-x-2">
+  <!-- Previous Page Button -->
+  {% if current_page > 1 %}
+    <a 
+      href="{{ url_for('index', page=current_page-1, filter_drug=filter_drug) }}"
+      class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+    >
+      Previous
+    </a>
+  {% else %}
+    <button class="px-3 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed" disabled>
+      Previous
+    </button>
+  {% endif %}
+
+  <!-- Current Page Indicator -->
+  <span class="text-gray-700">Page {{ page }} of {{ total_pages }}</span>
+
+  <!-- Next Page Button -->
+  {% if current_page < total_pages %}
+    <a
+      href="{{ url_for('index', page=current_page+1, filter_drug=filter_drug) }}"
+      class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+    >
+      Next
+    </a>
+  {% else %}
+    <button class="px-3 py-2 bg-gray-300 text-gray-500 rounded cursor-not-allowed" disabled>
+      Next
+    </button>
+  {% endif %}
+</div>
+
+<!-- Statistics Button (Visible When Filter is Active and Reports Exist) -->
+{% if filter_drug and rows|length > 0 %}
+  <div class="text-center mt-6">
+    <button 
+      onclick="showStatsModal()"
+      class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+    >
+      Show Statistics
+    </button>
+  </div>
+{% endif %}
+
+<!-- Modal for Report Details -->
+<div 
+  id="report-modal" 
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+>
+  <div class="bg-white rounded-lg w-11/12 md:w-3/4 lg:w-1/2 p-6 relative">
+    <button 
+      onclick="closeModal()" 
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+    >
+      &times;
+    </button>
+    <div id="modal-content">
+      <!-- Content dynamically loaded via AJAX -->
+      <p class="text-center">Loading...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Loading Statistics -->
+<div 
+  id="stats-modal" 
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+>
+  <div class="bg-white rounded-lg w-72 p-6 relative text-center">
+    <p class="text-xl font-semibold mb-4">Loading Statistics...</p>
+    <p>Please wait...</p>
+    <!-- Spinner for visual feedback -->
+    <svg class="animate-spin h-8 w-8 mx-auto text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+    </svg>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/**
+ * Opens the report details modal and fetches report data via AJAX.
+ * @param {string} safetyReportId - The ID of the safety report to display.
+ */
+function openModal(safetyReportId) {
+  const modal = document.getElementById('report-modal');
+  modal.classList.remove('hidden');
+
+  fetch(`/report/${safetyReportId}`)
+    .then(response => response.text())
+    .then(html => {
+      document.getElementById('modal-content').innerHTML = html;
+    })
+    .catch(error => {
+      console.error('Error fetching report details:', error);
+      document.getElementById('modal-content').innerHTML = '<p class="text-center text-red-500">Failed to load report details.</p>';
+    });
+}
+
+/**
+ * Closes the report details modal and resets its content.
+ */
+function closeModal() {
+  const modal = document.getElementById('report-modal');
+  modal.classList.add('hidden');
+  document.getElementById('modal-content').innerHTML = '<p class="text-center">Loading...</p>';
+}
+
+// Close the modal if the user clicks outside the modal content
+window.onclick = function(event) {
+  const reportModal = document.getElementById('report-modal');
+  if (event.target == reportModal) {
+    closeModal();
+  }
+
+  const statsModal = document.getElementById('stats-modal');
+  if (event.target == statsModal) {
+    statsModal.classList.add('hidden');
+  }
+}
+
+/*******************
+ * Autocomplete Functionality
+ ******************/
+let currentSuggestions = [];
+
+/**
+ * Fetches autocomplete suggestions based on user input.
+ * @param {string} value - The current value of the search input.
+ */
+function fetchSuggestions(value) {
+  const resultsDiv = document.getElementById('autocomplete-results');
+  if (!value || value.length < 1) {
+    resultsDiv.classList.add('hidden');
+    resultsDiv.innerHTML = '';
+    return;
+  }
+  fetch(`/autocomplete?q=${encodeURIComponent(value)}`)
+    .then(res => res.json())
+    .then(data => {
+      currentSuggestions = data;
+      showSuggestions(data);
+    })
+    .catch(err => console.error(err));
+}
+
+/**
+ * Displays autocomplete suggestions in the dropdown.
+ * @param {Array} suggestions - An array of suggestion strings.
+ */
+function showSuggestions(suggestions) {
+  const resultsDiv = document.getElementById('autocomplete-results');
+  if (!suggestions || suggestions.length === 0) {
+    resultsDiv.classList.add('hidden');
+    resultsDiv.innerHTML = '';
+    return;
+  }
+
+  // Build the suggestions list
+  let html = '';
+  suggestions.forEach(item => {
+    html += `
+      <div 
+        class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+        onclick="selectSuggestion('${item.replace(/'/g,"\\'")}')"
+      >
+        ${item}
+      </div>
+    `;
+  });
+
+  resultsDiv.innerHTML = html;
+  resultsDiv.classList.remove('hidden');
+}
+
+/**
+ * Handles the selection of a suggestion from the dropdown.
+ * @param {string} value - The selected suggestion value.
+ */
+function selectSuggestion(value) {
+  document.getElementById('drug-search').value = value;
+  document.getElementById('autocomplete-results').classList.add('hidden');
+  document.getElementById('autocomplete-results').innerHTML = '';
+}
+
+// Prevent form submission when navigating suggestions with arrow keys
+document.getElementById('drug-search').addEventListener('keydown', function(event) {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    event.preventDefault();
+  }
+});
+
+/*******************
+ * Show Statistics Modal
+ ******************/
+
+/**
+ * Displays the statistics loading modal and redirects to the statistics page.
+ */
+function showStatsModal() {
+  const modal = document.getElementById('stats-modal');
+  modal.classList.remove('hidden');
+
+  const drugInput = document.getElementById('drug-search').value.trim();
+  if (!drugInput) {
+    modal.classList.add('hidden');
+    return;
+  }
+
+  // Redirect to the statistics page after a short delay
+  setTimeout(() => {
+    window.location.href = `/statistics?drug=${encodeURIComponent(drugInput)}`;
+  }, 800); // 800ms delay for modal display
+}
+</script>
+{% endblock %}

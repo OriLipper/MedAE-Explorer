@@ -1,0 +1,89 @@
+<!-- templates/admin_edit_form.html -->
+
+<div class="text-left">
+  <!-- Form Heading -->
+  <h2 class="text-xl font-bold mb-4">Edit Row in {{ table_name }}</h2>
+  
+  <!-- Edit Form -->
+  <form onsubmit="submitEditForm(event, this)">
+      <!-- Hidden Inputs to Store Table Name and Row ID -->
+      <input type="hidden" name="table" value="{{ table_name }}">
+      <input type="hidden" name="row_id" value="{{ row_id }}">
+  
+      <!-- Form Fields Container with Vertical Spacing -->
+      <div class="space-y-4">
+          <!-- Iterate Over Each Column to Generate Corresponding Input Fields -->
+          {% for col in columns %}
+          <div>
+              <!-- Field Label -->
+              <label class="block text-gray-600 font-semibold mb-1">{{ col }}</label>
+              
+              <!-- Determine Input Type Based on Column Name -->
+              {% if col.lower().endswith('date') %}
+                  <!-- Date Picker for Date Fields -->
+                  <input 
+                      type="date"
+                      name="col_{{ col }}"
+                      value="{{ col_values[col] if col_values[col] is not none else '' }}"
+                      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+              {% elif 'boolean' in col.lower() or col.lower() in ['serious', 'seriousnessdeath', 'seriousnesslifethreatening', 'seriousnesshospitalization', 'seriousnessdisabling', 'seriousnesscongenitalanomali', 'seriousnessother', 'actiondrug', 'drugrecurreadministration', 'drugadditional'] %}
+                  <!-- Dropdown for Boolean Fields (Yes/No) -->
+                  <select 
+                      name="col_{{ col }}"
+                      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+                      <option value="" {% if col_values[col] is none %}selected{% endif %}>-- Select --</option>
+                      <option value="1" {% if col_values[col] == 1 %}selected{% endif %}>Yes</option>
+                      <option value="0" {% if col_values[col] == 0 %}selected{% endif %}>No</option>
+                  </select>
+              {% elif 'id' in col.lower() or col.lower().endswith('numb') or col.lower().endswith('number') %}
+                  <!-- Text Input for ID and Number Fields -->
+                  <input 
+                      type="text"
+                      name="col_{{ col }}"
+                      value="{{ col_values[col] if col_values[col] is not none else '' }}"
+                      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+              {% elif 'text' in col.lower() or 'name' in col.lower() or 'product' in col.lower() or 'route' in col.lower() or 'form' in col.lower() or 'indication' in col.lower() %}
+                  <!-- Text Input for Textual Fields -->
+                  <input 
+                      type="text"
+                      name="col_{{ col }}"
+                      value="{{ col_values[col] if col_values[col] is not none else '' }}"
+                      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+              {% else %}
+                  <!-- Default Text Input for Other Fields -->
+                  <input 
+                      type="text"
+                      name="col_{{ col }}"
+                      value="{{ col_values[col] if col_values[col] is not none else '' }}"
+                      class="border rounded w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  >
+              {% endif %}
+          </div>
+          {% endfor %}
+      </div>
+  
+      <!-- Form Action Buttons with Horizontal Spacing -->
+      <div class="mt-6 flex space-x-4">
+          <!-- Submit Button to Save Changes -->
+          <button 
+              type="submit" 
+              class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+              Save
+          </button>
+          
+          <!-- Cancel Button to Close the Modal Without Saving -->
+          <button 
+              type="button"
+              onclick="closeEditModal()"
+              class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+          >
+              Cancel
+          </button>
+      </div>
+  </form>
+</div>

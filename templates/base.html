@@ -1,0 +1,116 @@
+<!-- templates/base.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}MedAE Explorer{% endblock %}</title>
+  
+  <!-- Tailwind CSS via CDN for Styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+      /* Styles for Autocomplete Suggestions Dropdown */
+      .autocomplete-suggestions {
+          border: 1px solid #d4d4d4;
+          max-height: 200px;
+          overflow-y: auto;
+          position: absolute;
+          background-color: white;
+          z-index: 1000;
+          width: 100%;
+      }
+      .autocomplete-suggestion {
+          padding: 10px;
+          cursor: pointer;
+      }
+      .autocomplete-suggestion:hover {
+          background-color: #e9e9e9;
+      }
+
+      /* Styles for Admin Panel Horizontal Scrollbar */
+      .admin-table-container {
+          position: relative;
+      }
+
+      .admin-table-scroll {
+          overflow-x: auto;
+          overflow-y: auto;
+          max-height: 70vh; /* Adjust as needed for vertical height */
+      }
+
+      /* Custom Scrollbar Appearance for WebKit Browsers */
+      .admin-table-scroll::-webkit-scrollbar {
+          height: 12px;
+      }
+
+      .admin-table-scroll::-webkit-scrollbar-track {
+          background: #f1f1f1;
+      }
+
+      .admin-table-scroll::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 6px;
+      }
+
+      .admin-table-scroll::-webkit-scrollbar-thumb:hover {
+          background: #555;
+      }
+  </style>
+  
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <!-- Brand Logo and Name -->
+      <a href="/home" class="text-2xl font-bold text-blue-600">MedAE Explorer</a>
+      
+      <!-- Navigation Links -->
+      <div class="flex items-center space-x-3">
+        <a href="/home" class="px-3 py-2 text-gray-700 hover:text-blue-600">Home</a>
+        <a href="/" class="px-3 py-2 text-gray-700 hover:text-blue-600">All Reports</a>
+        <a href="/admin" class="px-3 py-2 text-gray-700 hover:text-blue-600">Admin Panel</a>
+        
+        <!-- Conditional Logout Button for Admin Users -->
+        {% if session.get('admin_logged_in') %}
+          <a href="{{ url_for('admin_logout') }}" class="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+            Logout
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="container mx-auto py-8 flex-grow">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="bg-gray-50 border-t border-gray-200 py-6 mt-8">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row items-center justify-between">
+        <!-- Left Side: Brand or Slogan -->
+        <div class="text-center md:text-left mb-4 md:mb-0">
+          <p class="text-sm text-gray-500">
+            © 2025 <span class="font-semibold">MedAE Explorer</span>. All rights reserved.
+          </p>
+        </div>
+        
+        <!-- Right Side: Additional Links -->
+        <div class="flex space-x-4 text-sm justify-center md:justify-end">
+          <a href="/home" class="text-gray-600 hover:text-blue-600">About</a>
+          <a href="/search" class="text-gray-600 hover:text-blue-600">Search</a>
+          <a href="#" class="text-gray-600 hover:text-blue-600">Privacy</a>
+          <a href="#" class="text-gray-600 hover:text-blue-600">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

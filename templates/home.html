@@ -1,0 +1,133 @@
+<!-- templates/home.html -->
+
+{% extends "base.html" %}
+
+{% block title %}Home - MedAE Explorer{% endblock %}
+
+{% block content %}
+
+<!-- Main container -->
+<div class="bg-white p-8 rounded shadow-md space-y-6">
+
+  <!-- Title and brief introduction -->
+  <div class="space-y-2">
+    <h1 class="text-4xl font-extrabold text-blue-700">Welcome to MedAE Explorer</h1>
+    <p class="text-gray-700 text-lg">
+      <strong>MedAE Explorer</strong> is a powerful web application designed to help healthcare professionals, 
+      researchers, and others easily view and analyze reported medication-related adverse events.
+    </p>
+  </div>
+
+  <!-- Project explanation -->
+  <div class="space-y-4">
+    <h2 class="text-2xl font-semibold text-blue-600">What This Project Is About</h2>
+    <p class="text-gray-700 leading-relaxed">
+      Our goal is to provide an intuitive interface for exploring large volumes of adverse event data. You can 
+      see details about reported reactions, patients, and related drugs—helping you discover safety signals, 
+      uncover trends, and make data-driven decisions.
+    </p>
+  </div>
+
+  <!-- Database schema explanation -->
+  <div class="space-y-4">
+    <h2 class="text-2xl font-semibold text-blue-600">Key Database Tables</h2>
+
+    <!-- safety_reports table -->
+    <div class="bg-blue-50 p-4 rounded-md shadow-sm">
+      <h3 class="text-xl font-semibold text-blue-800">1. <code>Safety_Reports</code></h3>
+      <ul class="list-disc list-inside mt-2 text-gray-700 leading-relaxed">
+        <li><strong>safetyreportid</strong>: A unique ID for each adverse event report.</li>
+        <li><strong>serious</strong> & other "seriousness" flags: Indicate whether the event is serious, involves hospitalization, etc.</li>
+        <li><strong>receivedate</strong> / <strong>receiptdate</strong>: Dates when the report was first and most recently received.</li>
+        <li><strong>companynumb</strong>: Links to a particular company's record.</li>
+        <li><strong>primarysource_reportercountry</strong>: Country code for where the report originated.</li>
+      </ul>
+      <p class="mt-2 text-gray-600">
+        This table acts as the central source of data for each event—capturing severity, dates, and reporter info.
+      </p>
+    </div>
+
+    <!-- patients table -->
+    <div class="bg-blue-50 p-4 rounded-md shadow-sm">
+      <h3 class="text-xl font-semibold text-blue-800">2. <code>Patients</code></h3>
+      <ul class="list-disc list-inside mt-2 text-gray-700 leading-relaxed">
+        <li><strong>patientagegroup</strong>: A coded age group (e.g., 1=Neonate, 5=Adult, etc.).</li>
+        <li><strong>patientsex</strong>: 0=unknown, 1=male, 2=female.</li>
+      </ul>
+      <p class="mt-2 text-gray-600">
+        Storing basic demographics helps identify any patterns based on patient age or sex.
+      </p>
+    </div>
+
+    <!-- reactions table -->
+    <div class="bg-blue-50 p-4 rounded-md shadow-sm">
+      <h3 class="text-xl font-semibold text-blue-800">3. <code>Reactions</code></h3>
+      <ul class="list-disc list-inside mt-2 text-gray-700 leading-relaxed">
+        <li><strong>reactionmeddrapt</strong>: Describes the adverse reaction using a standardized MedDRA term.</li>
+        <li><strong>reactionoutcome</strong>: Tracks the outcome (e.g., recovered, fatal).</li>
+      </ul>
+      <p class="mt-2 text-gray-600">
+        Each safety report can have multiple reactions, detailing the clinical manifestations of the event.
+      </p>
+    </div>
+
+    <!-- drugs table -->
+    <div class="bg-blue-50 p-4 rounded-md shadow-sm">
+      <h3 class="text-xl font-semibold text-blue-800">4. <code>Drugs</code></h3>
+      <ul class="list-disc list-inside mt-2 text-gray-700 leading-relaxed">
+        <li><strong>medicinalproduct</strong>: The name or brand of the medication.</li>
+        <li><strong>drugcharacterization</strong>: Role of the drug in the event (e.g., suspect, concomitant).</li>
+        <li><strong>drugdosageform</strong>, <strong>drugadministrationroute</strong>, <strong>drugindication</strong>, etc.: Additional context around usage.</li>
+      </ul>
+      <p class="mt-2 text-gray-600">
+        This table pinpoints which medications were involved in each report, offering deeper insight into treatment details.
+      </p>
+    </div>
+
+    <!-- companies table -->
+    <div class="bg-blue-50 p-4 rounded-md shadow-sm">
+      <h3 class="text-xl font-semibold text-blue-800">5. <code>Companies</code></h3>
+      <ul class="list-disc list-inside mt-2 text-gray-700 leading-relaxed">
+        <li><strong>companynumb</strong>: Unique number identifying the company.</li>
+        <li><strong>companyname</strong>: Official name of the manufacturer or organization.</li>
+      </ul>
+      <p class="mt-2 text-gray-600">
+        If an adverse event is linked to a specific company, data here helps track and summarize reports by manufacturer.
+      </p>
+    </div>
+  </div>
+
+  <!-- Explanation of the pages -->
+  <div class="space-y-4">
+    <h2 class="text-2xl font-semibold text-blue-600">Application Features</h2>
+    <ul class="list-decimal list-inside text-gray-700 leading-relaxed space-y-2">
+      <li>
+        <strong>All Reports:</strong> Quickly see a paginated list of all safety reports and open each for more detail.
+      </li>
+      <li>
+        <strong>Drug Search:</strong> Find safety reports for a specific drug using an autocomplete-enabled search bar. 
+        Narrow your focus and discover relevant cases in seconds.
+      </li>
+      <li>
+        <strong>Statistics:</strong> Generate charts and data visualizations (e.g., serious vs. non-serious, top reactions), 
+        revealing trends and insights at a glance.
+      </li>
+      <li>
+        <strong>Admin Panel:</strong> A password-protected section for managing the database, allowing authorized users 
+        to view, edit, or delete records across all tables.
+      </li>
+    </ul>
+  </div>
+
+  <!-- Concluding note -->
+  <div class="mt-6 p-4 border-l-4 border-blue-500 bg-blue-50 text-blue-700">
+    <p class="font-semibold">Ready to Explore?</p>
+    <p>
+      Use the navigation links above to browse all reports, perform drug-specific searches, 
+      or access the statistics dashboard. With <strong>MedAE Explorer</strong>, discovering 
+      meaningful adverse event information has never been easier.
+    </p>
+  </div>
+
+</div>
+{% endblock %}
